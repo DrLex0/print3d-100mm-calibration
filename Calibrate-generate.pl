@@ -30,7 +30,7 @@ while(@ARGV) {
 # Extrusion temperatures
 for my $temp (180, 200, 220, 240, 260, 280) {
 	for my $template ('Calib100mm-left', 'Calib100mm-right') {
-		my $filth = 0;
+		my $crlf = 0;
 		my $in_file = "${template}.gcode";
 		my $out_file = $in_file;
 		$out_file =~ s/^([^-]+)-(.*)$/$1-${temp}C-$2/;
@@ -45,7 +45,7 @@ for my $temp (180, 200, 220, 240, 260, 280) {
 		open($fHandle, '>', $out_file) or die "Cannot write to ${out_file}: $!";
 		foreach my $line (@slurp) {
 			if($line =~ /\r$/) {
-				$filth = 1;
+				$crlf = 1;
 				$line =~ s/\r$//;
 			}
 			if($customFeed && $line =~ /^G1 F\d*\.?\d+; Feed rate for the extrusions/) {
@@ -60,7 +60,7 @@ for my $temp (180, 200, 220, 240, 260, 280) {
 		system("make_fcp_x3g -P \"${out_file}\"");
 
 		# WHEN WILL THE WORLD DROP SUPPORT FOR TELETYPE MACHINES?
-		print "Warning: file '${in_file}' contains carriage returns!\n" if($filth);
+		print "Warning: file '${in_file}' contains carriage returns!\n" if($crlf);
 		unlink($out_file) unless($keep);
 		print "Generated and processed '${out_file}'\n";
 	}
