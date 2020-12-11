@@ -11,8 +11,8 @@
 
 Depending on how soft 3D printing filament is, your printer will extrude a different length of filament than you ask it to. The reason is explained in detail below. The remedy is to apply an *extrusion multiplier.* This repository provides files and a workflow that allow to determine an appropriate extrusion multiplier (abbreviated here as EM) for any given filament.
 
-These are ready-to-use X3G files for the FlashForge Creator Pro and similar printers, to perform the [calibration procedure as explained on the MatterHackers site](http://www.matterhackers.com/articles/how-to-calibrate-your-extruder). The files will instruct the printer to extrude exactly 100 mm of filament. Ideally this will result in exactly 100 mm of filament going into the extruder, but in practice it will usually be less, and to get accurate results while making actual prints, an *extrusion multiplier* must be applied to compensate for this.
- 
+This repository provides ready-to-use X3G files for the FlashForge Creator Pro and similar printers, to perform the [calibration procedure as explained on the MatterHackers site](http://www.matterhackers.com/articles/how-to-calibrate-your-extruder). The files will instruct the printer to extrude exactly 100 mm of filament. Ideally this will result in exactly 100 mm of filament going into the extruder, but in practice it will usually be less, and to get accurate results while making actual prints, an *extrusion multiplier* must be applied to compensate for this.
+
 
 ## How to use
 
@@ -22,23 +22,25 @@ Do not simply load the filament of which you want to measure the extrusion multi
 
 Next, hold the strand vertically and either mark a reference point on it, or just take the end of the strand as the reference point. Measure the distance between the top of the carriage and this reference point. This distance must be at least 100 mm (preferably a bit more). Keep the filament straight while measuring, but be careful not to stretch elastic filaments to avoid an incorrect measurement. Write down this distance.
 
-There are two sets of files, regular and slow. The regular ones are suitable for the more common materials like PLA, ABS, or PETG. The slow ones are recommended for TPU or other soft filaments. Pick the x3g file from for the appropriate set and desired extruder (left or right) and temperature.
+Now find the appropriate files in the `ready2use` subdirectories of the `files` directory. There are two sets of files, *regular* and *slow*. The regular ones (feed rate 900) are suitable for the more common materials like PLA, ABS, or PETG. The slow ones (feed rate 500) are recommended for TPU or other soft filaments. Pick the x3g file from for the appropriate set and desired extruder (left or right) and temperature. The temperature is not crucial, pick a temperature close to the one you'll be using for printing with this filament.
 
 ### ‘Printing’
 
 Leave the build platform at the bottom of the printer, its only purpose in this test will be to catch the spiral of extruded filament. I have only tested this from an SD card. Printing from USB should work as well, but I give no guarantees.
 
-Now ‘print’ the file you selected. The temperature is not crucial, pick a temperature close to the one you'll be using for printing with this filament. The LCD display will prompt to press OK when the extruder is at temperature. From then on, it takes less than 2 minutes to complete for the regular speed files, about 4 minutes for the slow files.
+Now ‘print’ the file you selected. The LCD display will prompt to press OK when the extruder is at temperature. From then on, it takes less than 2 minutes to complete for the regular speed files, about 4 minutes for the slow files.
 
 The carriage will move in a square pattern during the test, this is both a necessity to reliably extrude the correct length of material, and it has the nice side effect of coiling up the extruded strand.
-Don't mind the weird zig-zag dance at the end, this is to ensure the file has enough commands to avoid confusing messages on the LCD display. At the end, the display must show the extrusion counter at exactly 0.100 m because that is what the printer believes to have extruded.
+Don't mind the weird zig-zag dance at the end, this is to ensure the file has enough commands to keep the buffer filled and avoid confusing messages on the LCD display. At the end, the display must show the extrusion counter at exactly 0.100 m because that is what the printer believes to have extruded.
 
 ### Calculating the EM
 
-When it has finished, again measure the distance between the top of the carriage and your reference point (or end of the strand). Subtract this new distance from the one you measured before. The extrusion multiplier is this difference (in millimeters) divided by 100.
+When it has finished, again measure the distance between the top of the carriage and your reference point (or end of the strand). Subtract this new distance from the one you measured before. The extrusion multiplier is 100 divided by this difference (in millimeters).
 
-For instance, if you initially marked 110 mm and the final distance is 17 mm, the printer consumed 110 - 17 = 93 mm. This means your extrusion multiplier should be 100/93 = 1.0753.
+For instance, if you initially marked 110 mm and the final distance is 17 mm, the printer consumed 110 - 17 = 93 mm. This means your extrusion multiplier should be 100/93 = 1.0753.\
 Other example: the initial length of filament sticking out above the carriage was 120 mm and the final length is 17 mm. The extrusion multiplier should therefore be: 100 / (120 - 17) = 100/103 = 0.9709. (This is an unlikely scenario because most manufacturers will tune the extruder steps such that the hardest filaments will have an EM of 1.00.)
+
+![Examples](images/examples.png)
 
 For PLA and ABS, the extrusion multiplier should be very close to 1.00. For PETG it can be slightly higher, like 1.03. The softer the filament, the higher the multiplier should be (see explanation below). A flexible filament like NinjaFlex should yield a multiplier around 1.10. Anything far above that, is probably an indication that something went wrong, probably the extruder skipping due to too low temperature or too fast extrusion.
 
@@ -47,18 +49,17 @@ For PLA and ABS, the extrusion multiplier should be very close to 1.00. For PETG
 
 You should do the test at least **twice** with the same filament to check consistency of the result (this is why you should start with a strand of at least 260mm). If the results of the two tests deviate a lot, it may be an indication that something went wrong. If a third test yields yet another different result, repeat the test with the ‘slow’ files. If you still get wildly varying results with the slow files, check extrusion temperature and ensure your nozzle is clean and the extruder gears aren't clogged with remains of filament.
 
-If you need test files with an even slower extrusion rate than the ones I provide, just ask.
-
 In theory the test must be repeated for every different filament, but you can probably safely assume that different colors of the same material from the same brand will yield the same results.
+
+If you need test files with an even slower extrusion rate than the ones I provide, see “Making your own files” below, or just ask.
 
 Mind that you cannot re-print the test files with your calculated multiplier. This would require making new X3G files, and it would be pretty pointless anyway if you correctly measured and calculated everything. The goal is to use the EM in your slicing program while making actual prints.
 
 It is not essential to get the extrusion multiplier correct to umpteen digits after the decimal point. In fact, from this test I found out that I had been under- or over-extruding certain filaments for a long time, yet my prints were accurate and reliable. In the end, use the multiplier that provides the best results in practice, not in theory.
 
-This method will only compensate for the difference in expected versus actual extruded length. As explained below, it does not compensate for incorrect filament diameter because that is not the purpose of the extrusion multiplier.
+This method will only compensate for the difference in expected versus actual extruded length. As explained below, **it does not compensate for incorrect filament diameter** because that is not the purpose of the extrusion multiplier. You must configure both the exact diameter and the EM in your slicer for each filament to get accurate prints.
 
 Last but not least, do not keep extruding until the strand of filament disappears into the extruder and it runs out of material. Unless you're lucky and can push the strand down the tube with another strand, the only way to get out of this situation is to disassemble the extruder down to the hot-end, not my idea of fun.
- 
 
 ### Note about used material estimates
 
@@ -66,6 +67,10 @@ Some slicing programs, like Slic3r and PrusaSlicer at the time of this writing, 
 Please vote or comment on [Slic3r issue #4087](https://github.com/slic3r/Slic3r/issues/4087) to ask to fix this bug, and file a bug for other slicing programs if you notice they make this same mistake.
 
 If for some reason you want to deliberately over- or under-extrude, do not fiddle with the extrusion multiplier. Instead, respectively lower or raise the filament diameter in your slicing program.
+
+### Making your own files
+
+The files were generated from a set of template files with the `Calibrate-generate.pl` Perl script that replaces certain values in those files and then runs GPX on the result. Look in this script if you want to generate your own set of files. This is all a bit crude, I only did minimal efforts to make it somewhat generic. If you have made templates for a different model of printer, you could make a pull request to include them in this repository.
 
 
 ## Why is the extrusion multiplier needed?
@@ -90,21 +95,20 @@ As stated above, the extrusion multiplier must play no role in the calculation o
 ## Updates
 
 ### 2017/07/18
-
 First upload to Thingiverse.
 
 ### 2018/07/29
-
 Doubled the distance travelled per print move, because the extrusion rate per mm seemed too high and this caused exaggerated extrusion multiplier estimates. This should also make the extrusion slow enough for most flexible filaments. Also fixed problem of heaters staying enabled at the end.
 
 ### 2020/02/03
-
 Re-generated all files with much slower extrusion, because the previous files were still extruding way too fast even for normal filaments, making them basically useless. Make sure to replace all your files. The extrusion rate is now roughly equivalent to 15 mm/s print moves with a 0.6 mm extrusion width at 0.3 mm layer height. It is unlikely that you'll encounter a filament for which this is still too fast.
 Also ensured that the progress indicator on the LCD shows useful values.
 
 ### 2020/03/07
-
 Added ‘slow’ files because even the new files were still too fast to get reliable results with soft TPU like NinjaFlex. These new files run at almost half the speed of the other ones. If this still produces wildly varying results with a certain filament, it is probably pretty hopeless to print reliably with it…
+
+### 2020/12/11
+Migrated to GitHub, included generate script.
 
 
 ## Tags

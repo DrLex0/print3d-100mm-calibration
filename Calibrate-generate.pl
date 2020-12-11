@@ -1,40 +1,88 @@
 #!/usr/bin/perl
 # Generates all variations on the 100mm Calibration files.
-# Options:
-#   -k to keep the generated .gcode files.
-#   -f RATE to set a custom feed rate.
+# Either run inside the directory where the 'Template' files are,
+# or provide that directory with the -i argument.
+# The gpx binary must be in your PATH to generate x3g files.
 use strict;
 use warnings;
 
 
+sub usage
+{
+	print <<__END__;
+Usage: $0 [-k] [-f F] [-i in_dir] [-o out_dir]
+Generates all variations on the 100mm Calibration files, from two template
+  files that must be in the input directory: 'Template-left.gcode' and
+  'Template-right.gcode'. These files must contain specific comment lines,
+  see the source code.
+
+  -k: keep generated .gcode files.
+  -f F: override feed rate with value F.
+  -i in_dir: use templates in in_dir instead of looking in current directory.
+  -o out_dir: write output files to out_dir.
+__END__
+}
+
+# Extrusion temperatures to generate
+my @temps = (180, 200, 220, 240, 260, 280);
+
+# GPX machine type. Set to empty to disable X3G conversion.
+my $machine = 'fcp';
+
+my $inDir = '';
+my $outDir = '';
 my $keep = 0;
 my $customFeed = 0;
 
-while(@ARGV) {
+while(defined($ARGV[0]) && $ARGV[0] =~ /^-/) {
 	my $arg = shift;
-	if($arg eq '-k') {
-		$keep = 1;
-	}
-	elsif($arg eq '-f') {
-		$customFeed = shift;
-		if(! $customFeed || $customFeed !~ /^\d*\.?\d+$/) {
-			print STDERR "Error: -f option must be followed by a number\n";
-			exit(2);
+	my @switches = split(//, $arg);
+	shift(@switches);
+	foreach my $sw (@switches) {
+		if($sw eq 'h') {
+			usage();
+			exit(0);
 		}
-	}
-	else {
-		print STDERR "Warning: ignoring unknown argument '${arg}'\n";
+		elsif($sw eq 'k') {
+			$keep = 1;
+		}
+		elsif($sw eq 'f') {
+			$customFeed = shift;
+			if(! $customFeed || $customFeed !~ /^\d*\.?\d+$/) {
+				print STDERR "Error: -f option must be followed by a number\n";
+				exit(2);
+			}
+		}
+		elsif($sw eq 'i') {
+			$inDir = shift;
+			if(! $inDir || ! -d $inDir) {
+				print STDERR "Error: -i option must be followed by a directory path\n";
+				exit(2);
+			}
+		}
+		elsif($sw eq 'o') {
+			$outDir = shift;
+			if(! $outDir || ! -d $outDir) {
+				print STDERR "Error: -o option must be followed by an existing directory path\n";
+				exit(2);
+			}
+		}
+		else {
+			print STDERR "WARNING: ignoring unknown switch '${sw}'\n";
+		}
 	}
 }
 
-# Extrusion temperatures
-for my $temp (180, 200, 220, 240, 260, 280) {
-	for my $template ('Calib100mm-left', 'Calib100mm-right') {
+$inDir .= '/' if($inDir && $inDir !~ m|/$|);
+$outDir .= '/' if($outDir && $outDir !~ m|/$|);
+$keep = 1 if(! $machine);
+
+for my $temp (@temps) {
+	for my $template ('left', 'right') {
 		my $crlf = 0;
-		my $in_file = "${template}.gcode";
-		my $out_file = $in_file;
-		$out_file =~ s/^([^-]+)-(.*)$/$1-${temp}C-$2/;
-		die "Epic failure" if($out_file eq $in_file);
+		my $in_file = "${inDir}Template-${template}.gcode";
+		my $out_file = "${outDir}Calib100mm-${temp}C-${template}.gcode";
+		die "Epic failure: refusing to overwrite template file" if($out_file eq $in_file);
 
 		my $fHandle;
 		open($fHandle, '<', $in_file) or die "Cannot read from ${in_file}: $!";
@@ -57,7 +105,7 @@ for my $temp (180, 200, 220, 240, 260, 280) {
 			print $fHandle "$line\n";
 		}
 		close($fHandle);
-		system("make_fcp_x3g -P \"${out_file}\"");
+		system("gpx -m ${machine} \"${out_file}\"") if($machine);
 
 		# WHEN WILL THE WORLD DROP SUPPORT FOR TELETYPE MACHINES?
 		print "Warning: file '${in_file}' contains carriage returns!\n" if($crlf);
